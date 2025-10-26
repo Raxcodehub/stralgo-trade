@@ -5,7 +5,7 @@ Use this checklist to validate that the implementation meets all requirements fr
 ## Phase 1: Foundation Setup ✓
 
 - [ ] Spring Boot 3.5.7 project initialized with JDK 25
-- [ ] Maven/Gradle build configuration complete
+- [ ] Gradle build configuration complete
 - [ ] All core dependencies added (Spring Boot, Reactor, Disruptor)
 - [ ] Project structure created following DDD principles
 - [ ] Database schema designed and migration scripts ready
@@ -32,7 +32,13 @@ Use this checklist to validate that the implementation meets all requirements fr
   - [ ] RiskEvent
 - [ ] Repository layer implemented with R2DBC
 - [ ] Base exception hierarchy created
-- [ ] Spring Security basic setup complete
+- [ ] Spring Security JWT authentication setup complete:
+  - [ ] User entity with roles defined
+  - [ ] JWT service for token generation/validation implemented
+  - [ ] SecurityConfig with JWT filter configured
+  - [ ] Authentication endpoints (/api/auth/login, /api/auth/register) working
+  - [ ] Password encoding (BCrypt) configured
+  - [ ] Role-based access control implemented
 - [ ] Monitoring infrastructure (Micrometer) configured
 
 ## Phase 3: Broker Integration ✓
@@ -161,12 +167,20 @@ Use this checklist to validate that the implementation meets all requirements fr
 - [ ] Position updates streaming
 - [ ] Authentication for WebSocket connections
 
-### Notification Service
-- [ ] Email notifications working
-- [ ] SMS alerts functional (if configured)
-- [ ] Webhook integrations working
-- [ ] Alert rules configurable
-- [ ] Alert priority levels implemented
+### Flutter UI
+- [ ] Flutter project initialized in stralgo-ui module
+- [ ] pubspec.yaml configured with required dependencies
+- [ ] Basic app structure created (screens, widgets, models)
+- [ ] API integration service implemented
+- [ ] WebSocket client for real-time data
+- [ ] Dashboard screen with market overview
+- [ ] Strategy configuration screen
+- [ ] Order placement and management screens
+- [ ] Portfolio and P&L tracking
+- [ ] Real-time chart visualization
+- [ ] Push notifications for alerts
+- [ ] Responsive design for mobile and web
+- [ ] Authentication flow implemented
 
 ## Phase 9: Testing and Quality ✓
 

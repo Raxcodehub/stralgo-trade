@@ -15,6 +15,7 @@ Stralgo-Trade is designed to automate trading decisions and execution with minim
 - **Reactive Architecture**: Non-blocking I/O with Project Reactor
 - **Risk Management**: Comprehensive risk controls and position limits
 - **Order Management**: Full lifecycle management of orders and positions
+- **Cross-Platform UI**: Flutter-based mobile and web interface
 - **Monitoring**: Built-in metrics, health checks, and observability
 
 ## Tech Stack
@@ -25,17 +26,31 @@ Stralgo-Trade is designed to automate trading decisions and execution with minim
 - **LMAX Disruptor**: High-performance inter-thread messaging
 - **PostgreSQL/TimescaleDB**: Time-series data storage
 - **Redis**: Caching and session management
+- **Flutter**: Cross-platform UI framework for mobile and web
+- **Gradle**: Build automation and dependency management
 - **Docker**: Containerized deployment
 
 ## Getting Started
+
+### Prerequisites
+
+- JDK 25
+- Flutter SDK (for UI development)
+- Gradle 8.x
+- Docker and Docker Compose
+- PostgreSQL and Redis (via Docker)
 
 ### For Developers
 
 If you're setting up the project for development:
 
-1. Review the [Project Setup Guide](doc/PROJECT_SETUP.md)
-2. Follow the quick start instructions
-3. Refer to architecture documentation for design details
+1. Clone the repository
+2. Set up the backend: `cd stralgo-backend && ./gradlew build`
+3. Set up the UI: `cd stralgo-ui && flutter pub get`
+4. Start infrastructure: `docker-compose up -d`
+5. Configure environment variables (copy `.env.example` to `.env`)
+6. Run the backend: `./gradlew bootRun` (from backend directory)
+7. Run the UI: `flutter run` (from UI directory)
 
 ### For GitHub Copilot / AI Architects
 
@@ -51,17 +66,28 @@ The architecture prompt contains comprehensive requirements, design patterns, an
 
 ```
 stralgo-trade/
-├── doc/                             # Documentation folder
+├── stralgo-backend/                 # Spring Boot backend module
+│   ├── src/main/java/...           # Backend source code
+│   ├── src/main/resources/...      # Backend resources
+│   ├── src/test/...                # Backend tests
+│   └── build.gradle                # Backend build script
+├── stralgo-ui/                     # Flutter UI module
+│   ├── lib/...                     # Flutter source code
+│   ├── test/...                    # Flutter tests
+│   ├── pubspec.yaml                # Flutter dependencies
+│   └── android/ios/...             # Platform-specific code
+├── doc/                            # Documentation folder
 │   ├── COPILOT_ARCHITECTURE_PROMPT.md  # Main architecture and implementation guide
-│   ├── PROJECT_SETUP.md                # Quick setup reference
-│   ├── QUICKSTART_COPILOT.md           # Quick start guide for Copilot
-│   ├── IMPLEMENTATION_CHECKLIST.md     # Validation checklist
-│   ├── PACKAGE_SUMMARY.md              # Complete package overview
-│   ├── copilot-instructions.md         # Copilot instructions
-│   └── .env.example                    # Environment variables template
-├── README.md                        # This file
-├── .gitignore                      # Git ignore rules
-└── (Implementation will be added here)
+│   ├── PROJECT_SETUP.md            # Quick setup reference
+│   ├── QUICKSTART_COPILOT.md       # Quick start guide for Copilot
+│   ├── IMPLEMENTATION_CHECKLIST.md # Validation checklist
+│   ├── PACKAGE_SUMMARY.md          # Complete package overview
+│   ├── copilot-instructions.md     # Copilot instructions
+│   └── .env.example                # Environment variables template
+├── build.gradle                    # Root build script
+├── settings.gradle                 # Gradle settings
+├── README.md                       # This file
+└── .gitignore                      # Git ignore rules
 ```
 
 ## Documentation

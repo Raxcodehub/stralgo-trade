@@ -7,7 +7,7 @@ This repository now contains a comprehensive set of documentation and prompts fo
 ### 1. **COPILOT_ARCHITECTURE_PROMPT.md** (436 lines)
 The main architectural specification and implementation guide for GitHub Copilot or AI assistants. This comprehensive document includes:
 - Complete project overview and goals
-- Detailed tech stack specifications (JDK 25, Spring Boot 3.5.7, Project Reactor, LMAX Disruptor)
+- Detailed tech stack specifications (JDK 25, Spring Boot 3.5.7, Project Reactor, LMAX Disruptor, Flutter)
 - 8 core component specifications (Market Data, Strategy Engine, OMS, Risk Management, etc.)
 - Event processing architecture with Disruptor
 - Reactive programming patterns with Project Reactor
@@ -19,7 +19,7 @@ The main architectural specification and implementation guide for GitHub Copilot
 ### 2. **PROJECT_SETUP.md** (487 lines)
 Quick reference guide containing:
 - Complete project directory structure
-- Maven/Gradle dependency configurations
+- Gradle dependency configurations for backend, Flutter for UI
 - Environment variable specifications
 - Sample configuration files (application.yml)
 - Docker Compose setup for local development
@@ -113,10 +113,11 @@ The project is divided into 10 well-defined phases:
 6. **Order Management** (3-4 hours) - Order lifecycle and position tracking
 7. **Risk Management** (2-3 hours) - Risk limits and circuit breakers
 8. **API Layer** (2-3 hours) - REST/WebSocket APIs
-9. **Testing** (4-5 hours) - Unit, integration, and e2e tests
-10. **Documentation & Deployment** (2-3 hours) - Final docs and deployment setup
+9. **UI Development** (4-5 hours) - Flutter mobile/web interface
+10. **Testing** (4-5 hours) - Unit, integration, and e2e tests
+11. **Documentation & Deployment** (2-3 hours) - Final docs and deployment setup
 
-**Total Estimated Time**: 30-40 hours
+**Total Estimated Time**: 35-45 hours
 
 ## ✅ Success Criteria
 
@@ -136,12 +137,15 @@ The implementation will be considered successful when:
 ## 🔐 Security Considerations
 
 All documentation emphasizes security:
-- API credentials never committed to code
-- Environment variables for sensitive data
-- Input validation and sanitization
-- Authentication and authorization
+- JWT-based authentication with refresh tokens
+- BCrypt password hashing with strength validation
+- Role-based access control (USER, ADMIN roles)
+- API credentials stored securely (encrypted properties)
+- Input validation and sanitization on all endpoints
 - Rate limiting and circuit breakers
-- Audit logging for all operations
+- Audit logging for security events
+- Spring Security integration with stateless JWT authentication
+- Secure storage of broker API credentials
 
 ## 🛠️ Technology Stack
 
@@ -150,10 +154,12 @@ All documentation emphasizes security:
 - **Spring Boot 3.5.7** - Application framework
 - **Project Reactor** - Reactive programming
 - **LMAX Disruptor** - High-performance event processing
+- **Flutter** - Cross-platform UI framework
 
 ### Infrastructure
 - **PostgreSQL/TimescaleDB** - Time-series data
 - **Redis** - Caching
+- **Gradle** - Build automation
 - **Docker** - Containerization
 
 ### Monitoring

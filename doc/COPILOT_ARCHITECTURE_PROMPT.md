@@ -34,7 +34,8 @@ Design and implement a robust, scalable, and maintainable trading automation pla
 - **Logback/SLF4J**: For structured logging
 - **JUnit 5 + Mockito**: For unit testing
 - **TestContainers**: For integration testing
-- **Maven** or **Gradle**: For build management
+- **Flutter**: Cross-platform UI framework for mobile and web interfaces
+- **Gradle**: Build automation and dependency management
 
 ## Architecture Requirements
 
@@ -108,7 +109,19 @@ Design a **Reactive Microservices Architecture** with the following characterist
   - Performance metrics
 - **Integration**: Use R2DBC for reactive database access
 
-#### g) API Gateway
+#### g) User Management & Security
+- **Responsibility**: Handle user authentication, authorization, and account management
+- **Features**:
+  - JWT-based authentication with refresh tokens
+  - User registration and login/logout
+  - Role-based access control (Admin, Trader, Viewer)
+  - Password encryption and validation
+  - Session management and timeout handling
+  - Multi-factor authentication support
+  - User profile management
+  - Audit logging for security events
+
+#### h) API Gateway
 - **Responsibility**: External interface for monitoring and control
 - **Features**:
   - RESTful APIs for strategy management
@@ -117,7 +130,7 @@ Design a **Reactive Microservices Architecture** with the following characterist
   - API rate limiting
   - Request validation
 
-#### h) Notification Service
+#### i) Notification Service
 - **Responsibility**: Alert users of important events
 - **Features**:
   - Email notifications
@@ -125,6 +138,18 @@ Design a **Reactive Microservices Architecture** with the following characterist
   - Webhook integrations
   - Configurable alert rules
   - Alert priority levels
+
+#### j) User Interface (Flutter)
+- **Responsibility**: Provide cross-platform mobile and web interface
+- **Features**:
+  - Login and registration screens
+  - Real-time market data visualization
+  - Strategy configuration and monitoring
+  - Order placement and management
+  - Portfolio tracking and P&L display
+  - Risk management dashboard
+  - Alert notifications
+  - Responsive design for mobile and web
 
 ### 3. Event Processing Architecture
 
@@ -163,12 +188,18 @@ Implement Project Reactor patterns throughout:
 
 ### 6. Security Requirements
 
-- Secure storage of API credentials (use Spring Vault or encrypted properties)
-- JWT-based authentication for API access
-- Role-based access control (RBAC)
-- Audit logging of all sensitive operations
-- Rate limiting on external APIs
-- Input validation and sanitization
+- **Authentication**: JWT-based authentication with refresh token support
+- **Authorization**: Role-based access control (Admin, Trader, Viewer roles)
+- **User Management**: Secure user registration, login, and profile management
+- **Password Security**: BCrypt password hashing with strength validation
+- **Session Management**: Configurable session timeouts and concurrent session limits
+- **API Security**: Secure storage of broker API credentials (encrypted properties)
+- **Audit Logging**: Comprehensive logging of authentication and authorization events
+- **Rate Limiting**: API rate limiting and brute force protection
+- **Input Validation**: Comprehensive input sanitization and validation
+- **HTTPS Enforcement**: SSL/TLS encryption for all communications
+- **CORS Configuration**: Proper cross-origin resource sharing setup
+- **Security Headers**: Implementation of security headers (CSP, HSTS, etc.)
 
 ### 7. Monitoring and Observability
 
@@ -195,7 +226,7 @@ Implement Project Reactor patterns throughout:
 
 ### Phase 1: Foundation Setup
 1. Initialize Spring Boot 3.5.7 project with JDK 25
-2. Set up Maven/Gradle with all dependencies
+2. Set up Gradle with all dependencies
 3. Configure Project Reactor and LMAX Disruptor
 4. Establish project structure following DDD principles
 5. Set up database schema and migration scripts
@@ -203,11 +234,20 @@ Implement Project Reactor patterns throughout:
 
 ### Phase 2: Core Infrastructure
 1. Implement Disruptor event bus
-2. Create domain models (Order, Position, Instrument, Strategy, etc.)
+2. Create domain models (User, Order, Position, Instrument, Strategy, Trade, etc.)
 3. Set up reactive repository layer
 4. Implement logging and monitoring infrastructure
 5. Create base exception hierarchy
-6. Set up Spring Security basics
+6. Set up Spring Security with JWT authentication
+
+### Phase 2.5: User Management & Authentication
+1. Implement User entity and repository
+2. Create JWT token service
+3. Implement authentication endpoints (register, login, logout)
+4. Set up role-based authorization
+5. Create user profile management
+6. Implement password encryption and validation
+7. Add security audit logging
 
 ### Phase 3: Broker Integration
 1. Implement Zerodha API client
@@ -255,8 +295,12 @@ Implement Project Reactor patterns throughout:
 1. Create RESTful API endpoints
 2. Implement WebSocket for real-time updates
 3. Add API documentation (Swagger/OpenAPI)
-4. Create basic admin dashboard (optional)
-5. Implement notification service
+4. Initialize Flutter project for cross-platform UI
+5. Implement authentication screens (login, register, profile)
+6. Implement core UI screens (dashboard, strategy management, order placement)
+7. Integrate with backend APIs and authentication
+8. Implement real-time data updates
+8. Add notification handling in UI
 
 ### Phase 9: Testing and Quality
 1. Write unit tests for all core components
@@ -404,7 +448,7 @@ The implementation is successful when:
 
 As GitHub Copilot, you should:
 1. **Confirm Understanding**: Validate the requirements and ask clarifying questions
-2. **Create Project Structure**: Initialize the Maven/Gradle project with proper module structure
+2. **Create Project Structure**: Initialize the Gradle project with proper module structure
 3. **Generate Boilerplate**: Create Spring Boot configuration, application properties, and main classes
 4. **Implement Core Models**: Generate domain models and DTOs
 5. **Build Services**: Implement services following the phases outlined above
