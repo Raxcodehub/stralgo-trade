@@ -33,7 +33,7 @@ Stralgo-Trade is designed to automate trading decisions and execution with minim
 
 If you're setting up the project for development:
 
-1. Review the [Project Setup Guide](PROJECT_SETUP.md)
+1. Review the [Project Setup Guide](doc/PROJECT_SETUP.md)
 2. Follow the quick start instructions
 3. Refer to architecture documentation for design details
 
@@ -41,9 +41,9 @@ If you're setting up the project for development:
 
 If you're using GitHub Copilot or an AI assistant to implement this project:
 
-1. **Start here**: Read [COPILOT_ARCHITECTURE_PROMPT.md](COPILOT_ARCHITECTURE_PROMPT.md)
+1. **Start here**: Read [COPILOT_ARCHITECTURE_PROMPT.md](doc/COPILOT_ARCHITECTURE_PROMPT.md)
 2. Follow the implementation phases outlined in the prompt
-3. Use [PROJECT_SETUP.md](PROJECT_SETUP.md) as a quick reference
+3. Use [PROJECT_SETUP.md](doc/PROJECT_SETUP.md) as a quick reference
 
 The architecture prompt contains comprehensive requirements, design patterns, and implementation guidelines to build the entire system from scratch.
 
@@ -51,13 +51,15 @@ The architecture prompt contains comprehensive requirements, design patterns, an
 
 ```
 stralgo-trade/
-├── COPILOT_ARCHITECTURE_PROMPT.md  # Main architecture and implementation guide
-├── PROJECT_SETUP.md                # Quick setup reference
-├── QUICKSTART_COPILOT.md           # Quick start guide for Copilot
-├── IMPLEMENTATION_CHECKLIST.md     # Validation checklist
-├── PACKAGE_SUMMARY.md              # Complete package overview
+├── doc/                             # Documentation folder
+│   ├── COPILOT_ARCHITECTURE_PROMPT.md  # Main architecture and implementation guide
+│   ├── PROJECT_SETUP.md                # Quick setup reference
+│   ├── QUICKSTART_COPILOT.md           # Quick start guide for Copilot
+│   ├── IMPLEMENTATION_CHECKLIST.md     # Validation checklist
+│   ├── PACKAGE_SUMMARY.md              # Complete package overview
+│   ├── copilot-instructions.md         # Copilot instructions
+│   └── .env.example                    # Environment variables template
 ├── README.md                        # This file
-├── .env.example                    # Environment variables template
 ├── .gitignore                      # Git ignore rules
 └── (Implementation will be added here)
 ```
@@ -65,12 +67,12 @@ stralgo-trade/
 ## Documentation
 
 ### For Implementation (Current)
-- **[📦 Package Summary](PACKAGE_SUMMARY.md)**: Overview of the complete documentation package
-- **[🤖 Architecture Prompt](COPILOT_ARCHITECTURE_PROMPT.md)**: Complete architecture and implementation guide for AI assistants (436 lines)
-- **[🚀 Quick Start](QUICKSTART_COPILOT.md)**: Condensed guide to get started immediately (235 lines)
-- **[⚙️ Project Setup](PROJECT_SETUP.md)**: Quick reference for structure, dependencies, and setup (487 lines)
-- **[✅ Implementation Checklist](IMPLEMENTATION_CHECKLIST.md)**: Comprehensive validation checklist (325 lines)
-- **[🔧 Environment Template](.env.example)**: Configuration template for environment variables
+- **[📦 Package Summary](doc/PACKAGE_SUMMARY.md)**: Overview of the complete documentation package
+- **[🤖 Architecture Prompt](doc/COPILOT_ARCHITECTURE_PROMPT.md)**: Complete architecture and implementation guide for AI assistants (436 lines)
+- **[🚀 Quick Start](doc/QUICKSTART_COPILOT.md)**: Condensed guide to get started immediately (235 lines)
+- **[⚙️ Project Setup](doc/PROJECT_SETUP.md)**: Quick reference for structure, dependencies, and setup (487 lines)
+- **[✅ Implementation Checklist](doc/IMPLEMENTATION_CHECKLIST.md)**: Comprehensive validation checklist (325 lines)
+- **[🔧 Environment Template](doc/.env.example)**: Configuration template for environment variables
 
 ### To Be Created During Implementation
 - ARCHITECTURE.md: Detailed architecture documentation with diagrams
