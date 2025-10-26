@@ -7,7 +7,7 @@ This document provides quick setup instructions for developers and architects wo
 To begin implementation with GitHub Copilot:
 
 1. **Review the main prompt**: Read `COPILOT_ARCHITECTURE_PROMPT.md` thoroughly
-2. **Initialize the project**: Start with Maven/Gradle project setup
+2. **Initialize the project**: Start with Gradle project setup
 3. **Follow the phases**: Implement features incrementally as outlined
 4. **Test continuously**: Write tests alongside implementation
 5. **Document decisions**: Keep architecture decision records (ADRs)
@@ -16,174 +16,258 @@ To begin implementation with GitHub Copilot:
 
 ```
 stralgo-trade/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── com/
-│   │   │       └── stralgo/
-│   │   │           └── trade/
-│   │   │               ├── StralgoTradeApplication.java
-│   │   │               ├── config/
-│   │   │               │   ├── DisruptorConfig.java
-│   │   │               │   ├── ReactorConfig.java
-│   │   │               │   ├── SecurityConfig.java
-│   │   │               │   └── BrokerConfig.java
-│   │   │               ├── domain/
-│   │   │               │   ├── model/
-│   │   │               │   │   ├── Order.java
-│   │   │               │   │   ├── Position.java
-│   │   │               │   │   ├── Instrument.java
-│   │   │               │   │   ├── Strategy.java
-│   │   │               │   │   └── Trade.java
-│   │   │               │   ├── event/
-│   │   │               │   │   ├── MarketDataEvent.java
-│   │   │               │   │   ├── OrderEvent.java
-│   │   │               │   │   └── SignalEvent.java
-│   │   │               │   └── enums/
-│   │   │               │       ├── OrderType.java
-│   │   │               │       ├── OrderStatus.java
-│   │   │               │       └── TransactionType.java
-│   │   │               ├── broker/
-│   │   │               │   ├── api/
-│   │   │               │   │   └── BrokerClient.java
-│   │   │               │   ├── zerodha/
-│   │   │               │   │   ├── ZerodhaClient.java
-│   │   │               │   │   ├── ZerodhaWebSocket.java
-│   │   │               │   │   └── ZerodhaAuthService.java
-│   │   │               │   └── upstox/
-│   │   │               │       ├── UpstoxClient.java
-│   │   │               │       ├── UpstoxWebSocket.java
-│   │   │               │       └── UpstoxAuthService.java
-│   │   │               ├── marketdata/
-│   │   │               │   ├── MarketDataService.java
-│   │   │               │   ├── MarketDataProcessor.java
-│   │   │               │   ├── CandleAggregator.java
-│   │   │               │   └── TickNormalizer.java
-│   │   │               ├── strategy/
-│   │   │               │   ├── api/
-│   │   │               │   │   ├── TradingStrategy.java
-│   │   │               │   │   └── StrategyConfig.java
-│   │   │               │   ├── engine/
-│   │   │               │   │   └── StrategyEngine.java
-│   │   │               │   ├── indicators/
-│   │   │               │   │   ├── SMA.java
-│   │   │               │   │   ├── EMA.java
-│   │   │               │   │   ├── RSI.java
-│   │   │               │   │   └── MACD.java
-│   │   │               │   └── impl/
-│   │   │               │       ├── SMACrossoverStrategy.java
-│   │   │               │       └── RSIStrategy.java
-│   │   │               ├── order/
-│   │   │               │   ├── OrderService.java
-│   │   │               │   ├── OrderValidator.java
-│   │   │               │   ├── PositionTracker.java
-│   │   │               │   └── PnLCalculator.java
-│   │   │               ├── risk/
-│   │   │               │   ├── RiskManager.java
-│   │   │               │   ├── PositionLimitChecker.java
-│   │   │               │   └── CircuitBreaker.java
-│   │   │               ├── event/
-│   │   │               │   ├── DisruptorEventBus.java
-│   │   │               │   └── handlers/
-│   │   │               │       ├── MarketDataHandler.java
-│   │   │               │       ├── StrategyHandler.java
-│   │   │               │       └── OrderHandler.java
-│   │   │               ├── repository/
-│   │   │               │   ├── OrderRepository.java
-│   │   │               │   ├── PositionRepository.java
-│   │   │               │   ├── TradeRepository.java
-│   │   │               │   └── MarketDataRepository.java
-│   │   │               ├── api/
-│   │   │               │   ├── controller/
-│   │   │               │   │   ├── StrategyController.java
-│   │   │               │   │   ├── OrderController.java
-│   │   │               │   │   └── PositionController.java
-│   │   │               │   └── dto/
-│   │   │               │       ├── OrderRequest.java
-│   │   │               │       ├── OrderResponse.java
-│   │   │               │       └── StrategyRequest.java
-│   │   │               └── notification/
-│   │   │                   ├── NotificationService.java
-│   │   │                   └── AlertManager.java
-│   │   └── resources/
-│   │       ├── application.yml
-│   │       ├── application-dev.yml
-│   │       ├── application-prod.yml
-│   │       ├── logback-spring.xml
-│   │       └── db/
-│   │           └── migration/
-│   │               └── V1__initial_schema.sql
-│   └── test/
-│       └── java/
-│           └── com/
-│               └── stralgo/
-│                   └── trade/
-│                       ├── integration/
-│                       ├── unit/
-│                       └── e2e/
-├── pom.xml (or build.gradle)
+├── stralgo-backend/                    # Spring Boot backend module
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/
+│   │   │   │   └── com/
+│   │   │   │       └── stralgo/
+│   │   │   │           └── trade/
+│   │   │   │               ├── StralgoTradeApplication.java
+│   │   │   │               ├── config/
+│   │   │   │               │   ├── DisruptorConfig.java
+│   │   │   │               │   ├── ReactorConfig.java
+│   │   │   │               │   ├── SecurityConfig.java
+│   │   │   │               │   ├── JwtConfig.java
+│   │   │   │               │   └── BrokerConfig.java
+│   │   │   │               ├── domain/
+│   │   │   │               │   ├── model/
+│   │   │   │               │   │   ├── User.java
+│   │   │   │               │   │   ├── Order.java
+│   │   │   │               │   │   ├── Position.java
+│   │   │   │               │   │   ├── Instrument.java
+│   │   │   │               │   │   ├── Strategy.java
+│   │   │   │               │   │   └── Trade.java
+│   │   │   │               │   ├── event/
+│   │   │   │               │   │   ├── MarketDataEvent.java
+│   │   │   │               │   │   ├── OrderEvent.java
+│   │   │   │               │   │   └── SignalEvent.java
+│   │   │   │               │   └── enums/
+│   │   │   │               │       ├── UserRole.java
+│   │   │   │               │       ├── OrderType.java
+│   │   │   │               │       ├── OrderStatus.java
+│   │   │   │               │       └── TransactionType.java
+│   │   │   │               ├── broker/
+│   │   │   │               │   ├── api/
+│   │   │   │               │   │   └── BrokerClient.java
+│   │   │   │               │   ├── zerodha/
+│   │   │   │               │   │   ├── ZerodhaClient.java
+│   │   │   │               │   │   ├── ZerodhaWebSocket.java
+│   │   │   │               │   │   └── ZerodhaAuthService.java
+│   │   │   │               │   └── upstox/
+│   │   │   │               │       ├── UpstoxClient.java
+│   │   │   │               │       ├── UpstoxWebSocket.java
+│   │   │   │               │       └── UpstoxAuthService.java
+│   │   │   │               ├── marketdata/
+│   │   │   │               │   ├── MarketDataService.java
+│   │   │   │               │   ├── MarketDataProcessor.java
+│   │   │   │               │   ├── CandleAggregator.java
+│   │   │   │               │   └── TickNormalizer.java
+│   │   │   │               ├── strategy/
+│   │   │   │               │   ├── api/
+│   │   │   │               │   │   ├── TradingStrategy.java
+│   │   │   │               │   │   └── StrategyConfig.java
+│   │   │   │               │   ├── engine/
+│   │   │   │               │   │   └── StrategyEngine.java
+│   │   │   │               │   ├── indicators/
+│   │   │   │               │   │   ├── SMA.java
+│   │   │   │               │   │   ├── EMA.java
+│   │   │   │               │   │   ├── RSI.java
+│   │   │   │               │   │   └── MACD.java
+│   │   │   │               │   └── impl/
+│   │   │   │               │       ├── SMACrossoverStrategy.java
+│   │   │   │               │       └── RSIStrategy.java
+│   │   │   │               ├── order/
+│   │   │   │               │   ├── OrderService.java
+│   │   │   │               │   ├── OrderValidator.java
+│   │   │   │               │   ├── PositionTracker.java
+│   │   │   │               │   └── PnLCalculator.java
+│   │   │   │               ├── risk/
+│   │   │   │               │   ├── RiskManager.java
+│   │   │   │               │   ├── PositionLimitChecker.java
+│   │   │   │               │   └── CircuitBreaker.java
+│   │   │   │               ├── event/
+│   │   │   │               │   ├── DisruptorEventBus.java
+│   │   │   │               │   └── handlers/
+│   │   │   │               │       ├── MarketDataHandler.java
+│   │   │   │               │       ├── StrategyHandler.java
+│   │   │   │               │       └── OrderHandler.java
+│   │   │   │               ├── repository/
+│   │   │   │               │   ├── OrderRepository.java
+│   │   │   │               │   ├── PositionRepository.java
+│   │   │   │               │   ├── TradeRepository.java
+│   │   │   │               │   ├── UserRepository.java
+│   │   │   │               │   └── MarketDataRepository.java
+│   │   │   │               ├── api/
+│   │   │   │               │   ├── service/
+│   │   │   │               │   │   ├── UserService.java
+│   │   │   │               │   │   ├── JwtService.java
+│   │   │   │               │   │   └── AuthService.java
+│   │   │   │               │   ├── controller/
+│   │   │   │               │   │   ├── AuthController.java
+│   │   │   │               │   │   ├── StrategyController.java
+│   │   │   │               │   │   ├── OrderController.java
+│   │   │   │               │   │   └── PositionController.java
+│   │   │   │               │   └── dto/
+│   │   │   │               │       ├── AuthRequest.java
+│   │   │   │               │       ├── AuthResponse.java
+│   │   │   │               │       ├── UserRegistrationRequest.java
+│   │   │   │               │       ├── OrderRequest.java
+│   │   │   │               │       ├── OrderResponse.java
+│   │   │   │               │       └── StrategyRequest.java
+│   │   │   │               └── notification/
+│   │   │   │                   ├── NotificationService.java
+│   │   │   │                   └── AlertManager.java
+│   │   │   ├── resources/
+│   │   │   │   ├── application.yml
+│   │   │   │   ├── application-dev.yml
+│   │   │   │   ├── application-prod.yml
+│   │   │   │   ├── logback-spring.xml
+│   │   │   │   └── db/
+│   │   │   │       └── migration/
+│   │   │   │           └── V1__initial_schema.sql
+│   │   └── test/
+│   │       └── java/
+│   │           └── com/
+│   │               └── stralgo/
+│   │                   └── trade/
+│   │                       ├── integration/
+│   │                       ├── unit/
+│   │                       └── e2e/
+│   ├── build.gradle                       # Backend module build script
+│   └── src/test/java/com/stralgo/trade/   # Test directory
+│
+├── stralgo-ui/                           # Flutter UI module
+│   ├── lib/
+│   │   ├── main.dart
+│   │   ├── screens/
+│   │   │   ├── login_screen.dart
+│   │   │   ├── dashboard_screen.dart
+│   │   │   ├── portfolio_screen.dart
+│   │   │   ├── strategy_screen.dart
+│   │   │   └── settings_screen.dart
+│   │   ├── widgets/
+│   │   │   ├── market_data_chart.dart
+│   │   │   ├── order_form.dart
+│   │   │   ├── position_list.dart
+│   │   │   └── strategy_selector.dart
+│   │   ├── models/
+│   │   │   ├── user.dart
+│   │   │   ├── order.dart
+│   │   │   ├── position.dart
+│   │   │   └── market_data.dart
+│   │   ├── services/
+│   │   │   ├── api_service.dart
+│   │   │   ├── auth_service.dart
+│   │   │   ├── websocket_service.dart
+│   │   │   └── notification_service.dart
+│   │   ├── providers/
+│   │   │   ├── auth_provider.dart
+│   │   │   ├── portfolio_provider.dart
+│   │   │   └── market_data_provider.dart
+│   │   └── utils/
+│   │       ├── constants.dart
+│   │       ├── formatters.dart
+│   │       └── validators.dart
+│   ├── test/
+│   ├── android/
+│   ├── ios/
+│   ├── web/
+│   └── pubspec.yaml
+├── build.gradle                           # Root build script
+├── settings.gradle                        # Gradle settings for multi-module
 ├── .gitignore
 ├── docker-compose.yml
 ├── Dockerfile
 ├── README.md
 ├── ARCHITECTURE.md
-├── COPILOT_ARCHITECTURE_PROMPT.md
-└── PROJECT_SETUP.md
+├── docs
+│   ├── COPILOT_ARCHITECTURE_PROMPT.md
+│   ├── PROJECT_SETUP.md
+└── 
 ```
 
-## Essential Dependencies (Maven)
+## Essential Dependencies (Gradle)
 
-```xml
-<properties>
-    <java.version>25</java.version>
-    <spring-boot.version>3.5.7</spring-boot.version>
-    <disruptor.version>4.0.0</disruptor.version>
-    <reactor.version>2023.0.0</reactor.version>
-</properties>
+```gradle
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.7'
+    id 'io.spring.dependency-management' version '1.1.4'
+}
 
-<dependencies>
-    <!-- Spring Boot -->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-webflux</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-security</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-actuator</artifactId>
-    </dependency>
+group = 'com.stralgo.trade'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '25'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     
-    <!-- Reactive Data -->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-data-r2dbc</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.postgresql</groupId>
-        <artifactId>r2dbc-postgresql</artifactId>
-    </dependency>
+    // Reactive Data
+    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+    runtimeOnly 'org.postgresql:r2dbc-postgresql'
     
-    <!-- LMAX Disruptor -->
-    <dependency>
-        <groupId>com.lmax</groupId>
-        <artifactId>disruptor</artifactId>
-        <version>${disruptor.version}</version>
-    </dependency>
+    // LMAX Disruptor
+    implementation 'com.lmax:disruptor:4.0.0'
     
-    <!-- Project Reactor -->
-    <dependency>
-        <groupId>io.projectreactor</groupId>
-        <artifactId>reactor-core</artifactId>
-    </dependency>
+    // Project Reactor
+    implementation 'io.projectreactor:reactor-core'
     
-    <!-- Redis -->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
-    </dependency>
+    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
+    
+    // JWT Authentication
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    
+    // Validation
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+}
+```
+
+## Flutter Dependencies
+
+For the UI module, create `stralgo-ui/pubspec.yaml`:
+
+```yaml
+name: stralgo_ui
+description: Stralgo Trade Flutter UI
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  http: ^1.1.0
+  web_socket_channel: ^2.4.0
+  provider: ^6.0.5
+  intl: ^0.19.0
+  fl_chart: ^0.66.0
+  flutter_local_notifications: ^16.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+```
+
+## Environment Variables
+```
     
     <!-- Resilience4j -->
     <dependency>
@@ -271,6 +355,11 @@ logging:
     root: ${LOG_LEVEL:INFO}
     com.stralgo.trade: DEBUG
 
+jwt:
+  secret: ${JWT_SECRET:mySecretKey}
+  expiration: ${JWT_EXPIRATION:86400000}  # 24 hours in milliseconds
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7 days
+
 disruptor:
   ring-buffer-size: 8192
   wait-strategy: yielding
@@ -302,6 +391,133 @@ management:
     export:
       prometheus:
         enabled: true
+```
+
+## Configuration Classes
+
+### JwtConfig.java
+```java
+@Configuration
+public class JwtConfig {
+    @Value("${jwt.secret}")
+    private String secret;
+
+    @Value("${jwt.expiration}")
+    private long expiration;
+
+    @Value("${jwt.refresh-expiration}")
+    private long refreshExpiration;
+
+    @Bean
+    public SecretKey jwtSecretKey() {
+        return Keys.hmacShaKeyFor(secret.getBytes());
+    }
+
+    public long getExpiration() {
+        return expiration;
+    }
+
+    public long getRefreshExpiration() {
+        return refreshExpiration;
+    }
+}
+```
+
+### SecurityConfig.java
+```java
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfig {
+
+    private final JwtService jwtService;
+
+    public SecurityConfig(JwtService jwtService) {
+        this.jwtService = jwtService;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/public/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+            .build();
+    }
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtService);
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+}
+```
+
+### JwtAuthenticationFilter.java
+```java
+@Component
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtService jwtService;
+
+    public JwtAuthenticationFilter(JwtService jwtService) {
+        this.jwtService = jwtService;
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, 
+                                  HttpServletResponse response, 
+                                  FilterChain filterChain) throws ServletException, IOException {
+        
+        final String authHeader = request.getHeader("Authorization");
+        final String jwt;
+        final String userEmail;
+        
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
+        jwt = authHeader.substring(7);
+        
+        try {
+            userEmail = jwtService.extractUsername(jwt);
+            
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                if (jwtService.isTokenValid(jwt)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userEmail,
+                        null,
+                        jwtService.extractRoles(jwt).stream()
+                            .map(SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList())
+                    );
+                    
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("JWT authentication failed", e);
+        }
+        
+        filterChain.doFilter(request, response);
+    }
+}
 ```
 
 ## Docker Compose for Local Development
@@ -352,15 +568,17 @@ volumes:
 
 ## Development Workflow
 
-1. **Setup Environment**: Install JDK 25, Maven, Docker
+1. **Setup Environment**: Install JDK 25, Gradle, Flutter SDK, Docker
 2. **Clone Repository**: `git clone <repo-url>`
 3. **Start Dependencies**: `docker-compose up -d`
 4. **Configure Environment**: Copy `.env.example` to `.env` and fill in values
-5. **Build Project**: `mvn clean install`
-6. **Run Tests**: `mvn test`
-7. **Run Application**: `mvn spring-boot:run`
-8. **Access APIs**: http://localhost:8080
-9. **View Metrics**: http://localhost:8080/actuator/prometheus
+5. **Build Backend**: `cd stralgo-backend && ./gradlew build`
+6. **Build UI**: `cd stralgo-ui && flutter pub get`
+7. **Run Tests**: `./gradlew test` (from backend) and `flutter test` (from UI)
+8. **Run Backend**: `cd stralgo-backend && ./gradlew bootRun`
+9. **Run UI**: `cd stralgo-ui && flutter run`
+10. **Access APIs**: http://localhost:8080
+11. **View Metrics**: http://localhost:8080/actuator/prometheus
 
 ## Key Implementation Tips
 

@@ -17,23 +17,29 @@ Confirm understanding of:
 ## Step 2: Initialize Project (10 minutes)
 
 ```bash
-# Create Maven project with Spring Boot 3.5.7
-mvn archetype:generate \
-  -DgroupId=com.stralgo.trade \
-  -DartifactId=stralgo-trade \
-  -DarchetypeArtifactId=maven-archetype-quickstart \
-  -DinteractiveMode=false
+# Create Gradle multi-module project structure
+mkdir stralgo-trade
+cd stralgo-trade
 
-# Or use Spring Initializr
-curl https://start.spring.io/starter.zip \
-  -d dependencies=webflux,actuator,security,data-r2dbc,data-redis-reactive \
-  -d type=maven-project \
-  -d javaVersion=25 \
-  -d bootVersion=3.5.7 \
-  -o stralgo-trade.zip
+# Initialize root build files
+gradle init --type basic --dsl groovy
+
+# Create backend module
+mkdir stralgo-backend
+cd stralgo-backend
+gradle init --type java-application --dsl groovy
+
+# Create UI module
+cd ..
+mkdir stralgo-ui
+cd stralgo-ui
+flutter create .
+
+# Configure settings.gradle for multi-module
+echo "include 'stralgo-backend', 'stralgo-ui'" > ../settings.gradle
 ```
 
-Add dependencies from `PROJECT_SETUP.md` section "Essential Dependencies"
+Add dependencies from `PROJECT_SETUP.md` sections "Essential Dependencies (Gradle)" and "Flutter Dependencies"
 
 ## Step 3: Create Base Structure (15 minutes)
 
@@ -92,7 +98,24 @@ public class DisruptorConfig {
 2. Domain models
 3. Repository interfaces
 4. Exception hierarchy
-5. Security configuration
+5. **Security configuration (JWT + Spring Security)**
+
+### Security Implementation (Priority)
+```java
+// 1. Add User model and UserRole enum
+// 2. Create JWT service for token generation/validation
+// 3. Configure Spring Security with JWT filter
+// 4. Add authentication endpoints (/api/auth/login, /api/auth/register)
+// 5. Secure all API endpoints except auth
+```
+
+**Security Checklist:**
+- [ ] JWT configuration in application.yml
+- [ ] User entity with roles
+- [ ] Authentication service
+- [ ] JWT filter for request validation
+- [ ] Password encoding (BCrypt)
+- [ ] Role-based access control
 
 ## Step 6: Implement Phase 3 - Broker Integration (3-4 hours)
 
@@ -180,10 +203,11 @@ After each phase:
 - **Order Management**: 3-4 hours
 - **Risk Management**: 2-3 hours
 - **API Layer**: 2-3 hours
+- **UI Development**: 4-5 hours
 - **Testing**: 4-5 hours
 - **Documentation**: 2-3 hours
 
-**Total Estimated Time**: 30-40 hours for complete implementation
+**Total Estimated Time**: 35-45 hours for complete implementation
 
 ## Critical Success Factors
 
@@ -200,7 +224,10 @@ After each phase:
 A: Start with Zerodha - it has better documentation and wider adoption.
 
 **Q: Should I use Maven or Gradle?**
-A: Either works, but Maven is specified in examples. Choose what you're comfortable with.
+A: Gradle is specified for this project. Use Gradle for the backend module.
+
+**Q: How do I set up the Flutter UI?**
+A: Follow the Flutter setup in `PROJECT_SETUP.md`. Run `flutter create .` in the stralgo-ui directory.
 
 **Q: Do I need all the technologies mentioned?**
 A: Core ones (Spring Boot, Reactor, Disruptor) are mandatory. Others can be added incrementally.
