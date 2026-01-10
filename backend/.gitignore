@@ -1,0 +1,17 @@
+# Generic
+.DS_Store
+*.log
+*.tmp
+build/
+dist/
+out/
+
+#  (Gradle)
+/.gradle/
+/build/
+/*.iml
+/.idea/
+
+
+# Misc
+.vscode/
