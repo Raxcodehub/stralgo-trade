@@ -21,7 +21,7 @@ Stralgo-Trade is designed to automate trading decisions and execution with minim
 ## Tech Stack
 
 - **JDK 25**: Latest Java features and performance improvements
-- **Spring Boot 3.5.7**: Enterprise-grade application framework
+- **Spring Boot 4**: Enterprise-grade application framework
 - **Project Reactor**: Reactive, non-blocking programming model
 - **LMAX Disruptor**: High-performance inter-thread messaging
 - **PostgreSQL/TimescaleDB**: Time-series data storage
