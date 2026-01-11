@@ -15,3 +15,7 @@ out/
 
 # Misc
 .vscode/
+
+# Application Data
+**/data/**
+/.logs/**

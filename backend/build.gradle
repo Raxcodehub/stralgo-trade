@@ -15,3 +15,27 @@ application {
 repositories {
     mavenCentral()
 }
+
+dependencies {
+    // Log4j2 (API + Core). Version chosen to be a recent stable release.
+    implementation 'org.apache.logging.log4j:log4j-api:2.25.3'
+    implementation 'org.apache.logging.log4j:log4j-core:2.25.3'
+
+    //Tests
+
+    // Tests - JUnit Jupiter (JUnit 5)
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+
+    // Ensure the Jupiter engine is present on the test runtime classpath (resolves
+    // "Failed to load JUnit Platform" errors on some Gradle setups).
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+
+    // Explicitly add the JUnit Platform launcher to the test runtime classpath so
+    // Gradle can start the JUnit Platform in worker processes.
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.0'
+}
+
+// Configure the test task to use JUnit Platform
+test {
+    useJUnitPlatform()
+}
