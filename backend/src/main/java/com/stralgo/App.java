@@ -2,6 +2,9 @@ package com.stralgo;
 
 import com.stralgo.analysis.DerivedMetrics;
 import com.stralgo.analysis.RollingWindow;
+import com.stralgo.intraday.event.TickEvent;
+import com.stralgo.intraday.metrics.LatencyMetrics;
+import com.stralgo.intraday.pipeline.TickEventPipeline;
 import com.stralgo.market.Candle;
 import com.stralgo.market.CandleAggregator;
 import com.stralgo.market.Tick;
@@ -34,11 +37,17 @@ public class App {
         String symbol = "TEST";
 
         Path dataDir = Path.of("data");
-        /*
         CandleCsvWriters.init(dataDir);
 
         CandleAggregator aggregator = new CandleAggregator();
 
+        // New: pipeline and metrics used by both live-sim and replay
+        TickEventPipeline pipeline = new TickEventPipeline();
+        LatencyMetrics metrics = new LatencyMetrics();
+        final int PRINT_EVERY = 1000;
+        int tickCounter = 0;
+
+        // Live simulation: create ticks, wrap into TickEvent with receiveTime = Instant.now(), feed pipeline and metrics
         List<Tick> ticks = new ArrayList<>();
         for (int i = 0; i < 500; i++) {
             BigDecimal price = BigDecimal.valueOf(95 + Math.random() * 10);
@@ -47,22 +56,49 @@ public class App {
         }
 
         for (Tick tick : ticks) {
+            // preserve original aggregator behavior for CSV writers
             Optional<Candle> emitted = aggregator.onTick(tick);
             emitted.ifPresent(c -> {
                 System.out.println("Emitted candle: " + c);
-                // write asynchronously (fire-and-forget)
                 CandleCsvWriters.writeCompletedCandle(c);
             });
-        }*/
+
+            // New: create TickEvent at ingestion
+            Instant receiveTime = Instant.now();
+            // Ensure receiveTime is not before marketTime (simulation uses future-dated market timestamps)
+            if (receiveTime.isBefore(tick.timestamp())) {
+                receiveTime = tick.timestamp();
+            }
+            TickEvent event = TickEvent.ingest(tick, receiveTime);
+
+            // Pass through pipeline (which will set processedTime)
+            pipeline.onEvent(event);
+
+            // Now record in metrics. Ensure processedTime >= receiveTime to avoid negative processing latency
+            Instant processedInstant = Instant.now();
+            if (processedInstant.isBefore(receiveTime)) {
+                processedInstant = receiveTime;
+            }
+            TickEvent processed = event.withProcessedTime(processedInstant);
+            metrics.record(processed);
+
+            tickCounter++;
+            if (tickCounter % PRINT_EVERY == 0) {
+                printMetrics(metrics);
+            }
+        }
 
         System.out.println("Done feeding ticks.");
 
         // flush and close writers so files are consistent for reading
         CandleCsvWriters.close();
 
+        // Reset pipeline state before replay so aggregator doesn't receive out-of-order ticks
+        pipeline.reset();
+
         // Read candles back from CSV and print them (replay)
         CandleCsvReader reader = new CandleCsvReader();
-        Path file = dataDir.resolve(symbol).resolve(String.format("%s.csv", "2026-01-11"));
+        Path file = dataDir.resolve(symbol).resolve(String.format("%s.csv", "2026-01-12"));
 
         RollingWindow window5m = new RollingWindow(java.time.Duration.ofMinutes(5));
         RollingWindow window15m = new RollingWindow(java.time.Duration.ofMinutes(15));
@@ -88,6 +124,43 @@ public class App {
             long vol15m = DerivedMetrics.totalVolume(c15m);
             String time = c.startTime().toString().substring(11, 16); // HH:mm
             System.out.println(time + " | 5m range: " + range5m + " | 15m volume: " + vol15m);
+
+            // Mirror live ingestion: create a TickEvent-like flow for replay so metrics see the same code paths
+            // In replay mode market time is c.startTime(), we simulate receiveTime == now and processedTime == now
+            Tick fakeTick = Tick.of(c.symbol(), c.close(), c.volume(), c.startTime());
+            Instant receiveTime = Instant.now();
+            if (receiveTime.isBefore(fakeTick.timestamp())) {
+                receiveTime = fakeTick.timestamp();
+            }
+            TickEvent event = TickEvent.ingest(fakeTick, receiveTime);
+            pipeline.onEvent(event);
+            Instant processedInstant = Instant.now();
+            if (processedInstant.isBefore(receiveTime)) {
+                processedInstant = receiveTime;
+            }
+            TickEvent processed = event.withProcessedTime(processedInstant);
+            metrics.record(processed);
+
+            tickCounter++;
+            if (tickCounter % PRINT_EVERY == 0) {
+                printMetrics(metrics);
+            }
         }
+
+        // final metrics print
+        printMetrics(metrics);
+    }
+
+    private static void printMetrics(LatencyMetrics metrics) {
+        System.out.println("Ticks: " + metrics.ingestCount());
+        System.out.println("Ingest latency avg: " + metrics.ingestAverage().map(Duration -> formatDurationMillis(Duration)).orElse("-") );
+        System.out.println("Processing latency avg: " + metrics.processingAverage().map(Duration -> formatDurationMillis(Duration)).orElse("-") );
+        System.out.println("End-to-end latency avg: " + metrics.endToEndAverage().map(Duration -> formatDurationMillis(Duration)).orElse("-") );
+    }
+
+    private static String formatDurationMillis(java.time.Duration d) {
+        // format with 3 decimal places in milliseconds
+        double ms = d.toNanos() / 1_000_000.0;
+        return String.format("%.3f ms", ms);
     }
 }
