@@ -32,7 +32,14 @@ public class App {
         return base;
     }
 
-    static void main() throws Exception {
+    // MAIN: always run direct (non-reactive) ingestion
+    void main() throws Exception {
+        log.info("Starting application (non-reactive)");
+        runDirect();
+    }
+
+    // Original main body moved here (minimal diff: keep original logic intact).
+    private static void runDirect() throws Exception {
         log.info("Backend alive");
         String symbol = "TEST";
 
@@ -153,9 +160,9 @@ public class App {
 
     private static void printMetrics(LatencyMetrics metrics) {
         System.out.println("Ticks: " + metrics.ingestCount());
-        System.out.println("Ingest latency avg: " + metrics.ingestAverage().map(Duration -> formatDurationMillis(Duration)).orElse("-") );
-        System.out.println("Processing latency avg: " + metrics.processingAverage().map(Duration -> formatDurationMillis(Duration)).orElse("-") );
-        System.out.println("End-to-end latency avg: " + metrics.endToEndAverage().map(Duration -> formatDurationMillis(Duration)).orElse("-") );
+        System.out.println("Ingest latency avg: " + metrics.ingestAverage().map(App::formatDurationMillis).orElse("-") );
+        System.out.println("Processing latency avg: " + metrics.processingAverage().map(App::formatDurationMillis).orElse("-") );
+        System.out.println("End-to-end latency avg: " + metrics.endToEndAverage().map(App::formatDurationMillis).orElse("-") );
     }
 
     private static String formatDurationMillis(java.time.Duration d) {
