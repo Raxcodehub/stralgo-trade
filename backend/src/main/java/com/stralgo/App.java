@@ -22,6 +22,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+/**
+ * Application entry point and composition root.
+ *
+ * <p>The {@code App} class wires together system components and provides
+ * execution modes such as live simulation and replay.</p>
+ *
+ * <p>This class contains no business logic and exists solely to bootstrap
+ * and orchestrate experiments.</p>
+ */
+
 public class App {
     private static final Logger log = LogManager.getLogger(App.class);
 

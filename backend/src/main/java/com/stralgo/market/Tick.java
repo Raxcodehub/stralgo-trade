@@ -5,9 +5,25 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * Immutable market tick value object.
- * Contains symbol, price, quantity, and timestamp.
+ * Represents a single market tick (atomic market event).
+ * Note: This will be change heavily when it Zerodha integrated.
+ *
+ * <p>A {@code Tick} captures raw market information exactly as it occurred,
+ * without any system-specific timing or processing metadata.</p>
+ *
+ * <p>This class is immutable and represents market truth.</p>
+ *
+ * <p>Fields typically include:
+ * <ul>
+ *   <li>Symbol / instrument identifier</li>
+ *   <li>Traded price</li>
+ *   <li>Traded quantity</li>
+ *   <li>Market timestamp</li>
+ * </ul>
+ *
+ * <p>This object must not be modified once created.</p>
  */
+
 public record Tick(String symbol, BigDecimal price, long quantity, Instant timestamp) {
     // Compact canonical constructor for validation
     public Tick {

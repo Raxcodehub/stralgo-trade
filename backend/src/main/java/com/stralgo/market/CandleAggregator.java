@@ -9,11 +9,23 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Aggregates incoming ticks into 1-minute candles.
- * Assumes ticks arrive in time order per symbol.
- * Emits a completed candle when the minute boundary changes.
- * Does not modify past candles.
+ * Aggregates incoming {@link Tick} instances into 1-minute OHLCV candles.
+ *
+ * <p>The {@code CandleAggregator} maintains state for the currently active
+ * candle and emits a completed {@link Candle} when the minute boundary
+ * changes.</p>
+ *
+ * <p>Design characteristics:
+ * <ul>
+ *   <li>Assumes ticks arrive in time order per symbol</li>
+ *   <li>Does not recalculate historical candles</li>
+ *   <li>Deterministic and stateful</li>
+ * </ul>
+ *
+ * <p>This class forms a core building block for higher-level analysis
+ * and replay functionality.</p>
  */
+
 public final class CandleAggregator {
     // current in-progress candle builders keyed by symbol
     private final Map<String, CandleBuilder> current = new HashMap<>();

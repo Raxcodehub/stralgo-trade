@@ -33,19 +33,20 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Single-threaded, simple event pipeline for TickEvent processing.
- * <p>
- * Responsibilities:
- * - receive a TickEvent
- * - feed the contained Tick into the CandleAggregator
- * - when a Candle is emitted, add it to a per-symbol RollingWindow and
- *   perform lightweight in-memory analysis (pure functions)
- * - set the event's processedTime when processing completes
- * <p>
- * Notes:
- * - No IO, no concurrency.
- * - This class intentionally keeps state minimal and focused.
- * - By default uses a 5-minute rolling window (assumption; can be overridden).
+ * Defines the deterministic end-to-end processing pipeline for {@link TickEvent}s.
+ *
+ * <p>The {@code TickEventPipeline} represents the core execution path of the system.
+ * It processes events synchronously and without side effects such as IO or threading.</p>
+ *
+ * <p>Responsibilities include:
+ * <ul>
+ *   <li>Feeding ticks into candle aggregation</li>
+ *   <li>Updating rolling analysis windows</li>
+ *   <li>Marking processing completion time</li>
+ * </ul>
+ *
+ * <p>This pipeline is intentionally framework-agnostic to allow different
+ * event transport mechanisms to drive it.</p>
  */
 public final class TickEventPipeline {
     // aggregator recreated on reset; not final for that reason

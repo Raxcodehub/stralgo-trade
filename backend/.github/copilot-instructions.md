@@ -8,5 +8,6 @@ Rules:
 - Follow comments as specifications
 - Keep classes small and focused
 - Favor immutability where possible
+- Prioritize JDK 25 features
 
 This project is in early skeleton stage.

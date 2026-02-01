@@ -11,15 +11,17 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
 
-/// Maintains a rolling time window of candles.
-/// Window size is time-based (Duration). Old candles are evicted when a new
-/// candle is added and its timestamp moves the window forward.
-///
-/// Notes:
-/// - Internally stores candles in time order (oldest first).
-/// - Caller must add candles in non-decreasing time order; if an older candle
-///   is added after a newer one an IllegalArgumentException is thrown. This
-///   keeps the class simple and deterministic for live or replay feeds.
+/**
+ * Maintains a rolling, time-based window of {@link Candle} instances.
+ *
+ * <p>The window is defined by a fixed {@link java.time.Duration} and automatically
+ * evicts candles that fall outside the window.</p>
+ *
+ * <p>This class performs no computations itself; it only manages window state.</p>
+ *
+ * <p>Rolling windows are used as inputs for derived metric calculations.</p>
+ */
+
 public final class RollingWindow {
     private final Duration windowSize;
     private final Deque<Candle> deque = new ArrayDeque<>();

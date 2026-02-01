@@ -10,10 +10,15 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-/// Simple, deterministic CSV reader for candles.
-/// - No buffering/parallelism beyond Files.lines
-/// - Each CSV row: timestamp,open,high,low,close,volume
-/// - The symbol is derived from the parent directory name of the CSV file
+/**
+ * Reads {@link Candle} instances from CSV files for replay and analysis.
+ *
+ * <p>The reader emits candles in time order and reconstructs domain objects
+ * exactly as they were originally persisted.</p>
+ *
+ * <p>This class enables deterministic replay and reproducible experiments.</p>
+ */
+
 public final class CandleCsvReader {
     public Stream<Candle> read(Path file) throws IOException {
         Objects.requireNonNull(file, "file");

@@ -17,6 +17,7 @@ package com.stralgo.intraday.metrics;
 // No histograms yet. No percentiles. We’re measuring existence, not excellence.
 
 import com.stralgo.intraday.event.TickEvent;
+import com.stralgo.market.Candle;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -24,12 +25,20 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Thread-safe, tiny collector of latency aggregates for TickEvent objects.
+ * Collects and summarizes latency measurements for {@link TickEvent}s.
  *
- * Design notes:
- * - Stores values in nanoseconds for precision, exposes Duration to callers.
- * - Keeps count, min, max and total (for average) for three latency types.
- * - "Stupid-simple" API: record events and query aggregates as Optionals.
+ * <p>Measured latencies include:
+ * <ul>
+ *   <li>Ingest latency</li>
+ *   <li>Processing latency</li>
+ *   <li>End-to-end latency</li>
+ * </ul>
+ *
+ * <p>The current implementation tracks basic statistics such as count,
+ * minimum, maximum, and average.</p>
+ *
+ * <p>This class exists to guide architectural decisions through measurement,
+ * not optimization.</p>
  */
 public final class LatencyMetrics {
     private final Object lock = new Object();

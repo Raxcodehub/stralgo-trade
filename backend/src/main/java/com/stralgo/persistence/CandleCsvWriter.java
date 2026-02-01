@@ -1,5 +1,7 @@
 package com.stralgo.persistence;
 
+import com.stralgo.market.Candle;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -14,6 +16,18 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * Persists completed {@link Candle} instances to CSV files.
+ *
+ * <p>The writer appends candle data to disk using a simple, human-readable format.
+ * Each symbol and trading day is stored in a separate file.</p>
+ *
+ * <p>Design principles:
+ * <ul>
+ *   <li>Append-only (no rewriting history)</li>
+ *   <li>Deterministic output</li>
+ *   <li>Easy inspection and debugging</li>
+ * </ul>
+
  * Writes completed candles to CSV files.
  * Appends data (never rewrites history).
  * File pattern: data/<symbol>/<YYYY-MM-DD>.csv
@@ -60,6 +74,15 @@ public class CandleCsvWriter {
         if (!ok) {
             // Simple debug log - no logging framework is required here
             System.err.println("[debug] CandleCsvWriter: failed to enqueue write for symbol=" + symbol + " ts=" + timestamp);
+        }
+    }
+
+    public void writeCompletedCandle(Candle candle) {
+        boolean ok = writeCompletedCandleAsync(candle.symbol(), candle.startTime(), candle.open().doubleValue(),
+                candle.high().doubleValue(), candle.low().doubleValue(), candle.close().doubleValue(), candle.volume());
+        if (!ok) {
+            // Simple debug log - no logging framework is required here
+            System.err.println("[debug] CandleCsvWriter: failed to enqueue write for symbol=" + candle.symbol() + " ts=" + candle.startTime());
         }
     }
 

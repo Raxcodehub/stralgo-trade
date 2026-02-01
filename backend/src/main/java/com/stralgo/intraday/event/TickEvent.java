@@ -1,28 +1,25 @@
 package com.stralgo.intraday.event;
 
-// Wraps a market Tick with timing metadata
-// marketTime: when the event occurred in the market
-// receiveTime: when the system received it
-// processedTime: when the system finished processing it
-//
-// Fields:
-// Tick tick
-// Instant marketTime
-// Instant receiveTime
-// Instant processedTime
-//
-// Rules:
-// marketTime comes from the tick
-// receiveTime is set at ingestion
-// processedTime is set at pipeline exit
-//
-// This class exists only so latency becomes measurable.
-
 import com.stralgo.market.Tick;
 
 import java.time.Instant;
 import java.util.Objects;
 
+/**
+ * Wraps a {@link Tick} with system timing metadata.
+ *
+ * <p>{@code TickEvent} separates market time from system processing time,
+ * enabling accurate latency measurement without modifying domain objects.</p>
+ *
+ * <p>Timestamps captured include:
+ * <ul>
+ *   <li>Market time – when the event occurred in the market</li>
+ *   <li>Receive time – when the system received the event</li>
+ *   <li>Processed time – when processing completed</li>
+ * </ul>
+ *
+ * <p>This class is used as the unit of measurement for latency analysis.</p>
+ */
 public final class TickEvent {
     private final Tick tick;
     private final Instant marketTime;

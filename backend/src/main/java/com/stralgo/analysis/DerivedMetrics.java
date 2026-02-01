@@ -7,10 +7,19 @@ import java.math.RoundingMode;
 import java.util.List;
 
 /**
- * Computes simple metrics from a list of candles.
- * No trading decisions.
- * Pure functions only.
+ * Computes simple derived metrics from collections of {@link Candle}s.
+ *
+ * <p>{@code DerivedMetrics} provides stateless, pure functions that calculate
+ * commonly used market measurements such as range, volume, and averages.</p>
+ *
+ * <p>This class:
+ * <ul>
+ *   <li>Maintains no internal state</li>
+ *   <li>Performs no trading decisions</li>
+ *   <li>Is safe for replay and backtesting</li>
+ * </ul>
  */
+
 public final class DerivedMetrics {
 
     private DerivedMetrics() {

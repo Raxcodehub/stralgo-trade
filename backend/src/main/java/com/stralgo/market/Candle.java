@@ -5,14 +5,24 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * Immutable 1-minute OHLCV candle value object.
- * <p>
- * - startTime is the minute boundary (seconds and nanos must be zero)
- * - open is the first tick price
- * - high is the maximum price during the minute
- * - low is the minimum price during the minute
- * - close is the last tick price
- * - volume is the cumulative quantity
+ * Represents a completed OHLCV candle.
+ *
+ * <p>A {@code Candle} is a derived market fact produced by aggregating
+ * multiple {@link Tick} instances over a fixed time interval.</p>
+ *
+ * <p>This class contains no aggregation logic; it is a pure data holder.</p>
+ *
+ * <p>Each candle includes:
+ * <ul>
+ *   <li>Symbol - instrument</li>
+ *   <li>Open price (first tick)</li>
+ *   <li>High price</li>
+ *   <li>Low price</li>
+ *   <li>Close price (last tick)</li>
+ *   <li>Total traded volume</li>
+ * </ul>
+ *
+ * <p>Candles are immutable once created.</p>
  */
 public record Candle(
         String symbol,
