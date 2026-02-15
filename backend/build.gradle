@@ -20,6 +20,7 @@ dependencies {
     // Log4j2 (API + Core). Version chosen to be a recent stable release.
     implementation 'org.apache.logging.log4j:log4j-api:2.25.3'
     implementation 'org.apache.logging.log4j:log4j-core:2.25.3'
+    implementation("com.lmax:disruptor:4.0.0")
 
     // Tests
 

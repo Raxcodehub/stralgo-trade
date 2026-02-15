@@ -81,6 +81,16 @@ public final class TickEventPipeline {
     }
 
     /**
+     * Get the rolling window for a given symbol.
+     *
+     * @param symbol the instrument symbol
+     * @return the rolling window if it exists, null otherwise
+     */
+    public RollingWindow getWindow(String symbol) {
+        return windows.get(symbol);
+    }
+
+    /**
      * Process a single TickEvent end-to-end.
      * <p>
      * This method is intentionally simple: single-threaded, no IO, no logging.

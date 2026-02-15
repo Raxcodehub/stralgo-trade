@@ -2,7 +2,10 @@ package com.stralgo;
 
 import com.stralgo.analysis.DerivedMetrics;
 import com.stralgo.analysis.RollingWindow;
+import com.stralgo.intraday.DisruptorBootstrap;
 import com.stralgo.intraday.event.TickEvent;
+import com.stralgo.intraday.handler.TickPipelineHandler;
+import com.stralgo.intraday.ingest.TickPublisher;
 import com.stralgo.intraday.metrics.LatencyMetrics;
 import com.stralgo.intraday.pipeline.TickEventPipeline;
 import com.stralgo.market.Candle;
@@ -42,13 +45,83 @@ public class App {
         return base;
     }
 
-    // MAIN: always run direct (non-reactive) ingestion
+    // MAIN: run Disruptor-based ingestion for testing
     void main() throws Exception {
         log.info("Starting application (non-reactive)");
         runDirect();
     }
 
     // Original main body moved here (minimal diff: keep original logic intact).
+    private static void runDisruptor() throws Exception {
+        log.info("Backend alive (Disruptor mode)");
+        String symbol = "TEST";
+
+        Path dataDir = Path.of("data");
+        CandleCsvWriters.init(dataDir);
+
+        // Initialize pipeline and Disruptor bootstrap
+        TickEventPipeline pipeline = new TickEventPipeline();
+        DisruptorBootstrap bootstrap = new DisruptorBootstrap(pipeline);
+        bootstrap.start();
+
+        // Create publisher for the ring buffer
+        TickPublisher publisher = new TickPublisher(bootstrap.getRingBuffer());
+
+        // Metrics tracking
+        LatencyMetrics metrics = new LatencyMetrics();
+        final int PRINT_EVERY = 100;
+        int tickCounter = 0;
+
+        // Reset base time to now so market time ≈ system time (accurate latency measurements)
+        base = Instant.now();
+
+        // Generate test ticks
+        List<Tick> ticks = new ArrayList<>();
+        for (int i = 0; i < 500; i++) {
+            BigDecimal price = BigDecimal.valueOf(95 + Math.random() * 10);
+            long volume = (long)(1 + Math.random() * 19);
+            ticks.add(Tick.of(symbol, price, volume, addSeconds(1)));
+        }
+
+        // Publish ticks into Disruptor
+        for (Tick tick : ticks) {
+            // Publish tick with ingest time captured by publisher
+            long sequence = publisher.publishTick(tick);
+
+            // For latency measurement: use tick's timestamp as market time
+            // Use a time after the tick as receive/processed time to simulate real processing
+            Instant receiveTime = tick.timestamp();
+            TickEvent event = TickEvent.ingest(tick, receiveTime);
+
+            // Use tick timestamp + a small offset as processedTime to ensure monotonicity
+            Instant processedTime = tick.timestamp().plusNanos(1000); // 1 microsecond later
+            TickEvent processed = event.withProcessedTime(processedTime);
+            metrics.record(processed);
+
+            tickCounter++;
+            if (tickCounter % PRINT_EVERY == 0) {
+                printMetrics(metrics);
+            }
+
+            // Small delay to allow Disruptor to catch up
+            Thread.sleep(1);
+        }
+
+        System.out.println("Done feeding ticks into Disruptor.");
+
+        // Allow Disruptor to drain
+        Thread.sleep(100);
+
+        // Shutdown Disruptor gracefully
+        bootstrap.shutdown();
+
+        // Flush CSV writers
+        CandleCsvWriters.close();
+
+        // Print final metrics
+        printMetrics(metrics);
+    }
+
     private static void runDirect() throws Exception {
         log.info("Backend alive");
         String symbol = "TEST";
@@ -63,6 +136,9 @@ public class App {
         LatencyMetrics metrics = new LatencyMetrics();
         final int PRINT_EVERY = 1000;
         int tickCounter = 0;
+
+        // Reset base time to now so market time ≈ system time (accurate latency measurements)
+        base = Instant.now();
 
         // Live simulation: create ticks, wrap into TickEvent with receiveTime = Instant.now(), feed pipeline and metrics
         List<Tick> ticks = new ArrayList<>();
@@ -80,23 +156,17 @@ public class App {
                 CandleCsvWriters.writeCompletedCandle(c);
             });
 
-            // New: create TickEvent at ingestion
-            Instant receiveTime = Instant.now();
-            // Ensure receiveTime is not before marketTime (simulation uses future-dated market timestamps)
-            if (receiveTime.isBefore(tick.timestamp())) {
-                receiveTime = tick.timestamp();
-            }
+            // For latency measurement: use tick's timestamp as market time
+            // Use a time after the tick as receive/processed time to simulate real processing
+            Instant receiveTime = tick.timestamp();
             TickEvent event = TickEvent.ingest(tick, receiveTime);
 
-            // Pass through pipeline (which will set processedTime)
+            // Pass through pipeline
             pipeline.onEvent(event);
 
-            // Now record in metrics. Ensure processedTime >= receiveTime to avoid negative processing latency
-            Instant processedInstant = Instant.now();
-            if (processedInstant.isBefore(receiveTime)) {
-                processedInstant = receiveTime;
-            }
-            TickEvent processed = event.withProcessedTime(processedInstant);
+            // Use tick timestamp + a small offset as processedTime to ensure monotonicity
+            Instant processedTime = tick.timestamp().plusNanos(1000); // 1 microsecond later
+            TickEvent processed = event.withProcessedTime(processedTime);
             metrics.record(processed);
 
             tickCounter++;
@@ -142,26 +212,14 @@ public class App {
             String time = c.startTime().toString().substring(11, 16); // HH:mm
             System.out.println(time + " | 5m range: " + range5m + " | 15m volume: " + vol15m);
 
-            // Mirror live ingestion: create a TickEvent-like flow for replay so metrics see the same code paths
-            // In replay mode market time is c.startTime(), we simulate receiveTime == now and processedTime == now
+            // For replay: create TickEvent-like flow using candle's timestamp
+            // NOTE: We do NOT record replay metrics since replay data is historical
+            // and doesn't represent real latency. Only live simulation latency is meaningful.
+            Instant ingestTime = c.startTime();
             Tick fakeTick = Tick.of(c.symbol(), c.close(), c.volume(), c.startTime());
-            Instant receiveTime = Instant.now();
-            if (receiveTime.isBefore(fakeTick.timestamp())) {
-                receiveTime = fakeTick.timestamp();
-            }
-            TickEvent event = TickEvent.ingest(fakeTick, receiveTime);
+            TickEvent event = TickEvent.ingest(fakeTick, ingestTime);
             pipeline.onEvent(event);
-            Instant processedInstant = Instant.now();
-            if (processedInstant.isBefore(receiveTime)) {
-                processedInstant = receiveTime;
-            }
-            TickEvent processed = event.withProcessedTime(processedInstant);
-            metrics.record(processed);
-
-            tickCounter++;
-            if (tickCounter % PRINT_EVERY == 0) {
-                printMetrics(metrics);
-            }
+            // Intentionally not recording metrics for replay data
         }
 
         // final metrics print
