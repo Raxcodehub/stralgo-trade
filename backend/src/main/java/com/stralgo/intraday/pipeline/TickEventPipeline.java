@@ -21,6 +21,7 @@ import com.stralgo.market.Candle;
 import com.stralgo.market.CandleAggregator;
 import com.stralgo.market.Tick;
 import com.stralgo.analysis.RollingWindow;
+import com.stralgo.analysis.RollingVolumeTracker;
 import com.stralgo.analysis.DerivedMetrics;
 
 import java.math.BigDecimal;
@@ -54,6 +55,10 @@ public final class TickEventPipeline {
     private final Map<String, RollingWindow> windows = new HashMap<>();
     private final Duration windowSize;
 
+    // Per-symbol rolling volume trackers (updated on every Tick)
+    private final Map<String, RollingVolumeTracker> volumeTrackers = new HashMap<>();
+    private static final int DEFAULT_VOLUME_WINDOW = 256;
+
     /**
      * Default constructor uses a 5-minute rolling window.
      */
@@ -78,6 +83,15 @@ public final class TickEventPipeline {
     public void reset() {
         this.aggregator = new CandleAggregator();
         this.windows.clear();
+        this.volumeTrackers.clear();
+    }
+
+    /**
+     * Get the volume tracker for a symbol, or null if none exists.
+     * The tracker is created lazily by the pipeline when ticks arrive.
+     */
+    public RollingVolumeTracker getVolumeTracker(String symbol) {
+        return volumeTrackers.get(symbol);
     }
 
     /**
@@ -100,6 +114,10 @@ public final class TickEventPipeline {
 
         // Extract underlying tick
         Tick tick = Objects.requireNonNull(event.tick(), "event.tick");
+
+        // Update per-symbol rolling volume tracker (per-tick, hot path)
+        RollingVolumeTracker vt = volumeTrackers.computeIfAbsent(tick.symbol(), s -> new RollingVolumeTracker(DEFAULT_VOLUME_WINDOW));
+        vt.add(tick.quantity());
 
         // Process with resilience to out-of-order ticks which can occur in demo/replay flows.
         // We want the pipeline to keep running; out-of-order ticks are dropped for now.

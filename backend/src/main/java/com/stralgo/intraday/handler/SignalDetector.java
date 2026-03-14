@@ -131,7 +131,7 @@ public final class SignalDetector implements EventHandler<DisruptorTickEvent> {
             long totalVolume = DerivedMetrics.totalVolume(candles);
             BigDecimal avgClose = DerivedMetrics.averageClose(candles);
 
-            // Determine signal type based on simple conditions
+                // Determine signal type based on simple conditions
             // NOTE: This is placeholder logic for demonstration
             // Real signal strategies would be implemented here
             int signalType = determineSignalType(currentPrice, avgClose, range);
@@ -141,10 +141,22 @@ public final class SignalDetector implements EventHandler<DisruptorTickEvent> {
                 // Calculate signal strength (placeholder: always 5000 basis points = 50%)
                 int strength = 5000;
 
+                // Read rolling average volume from pipeline's volume tracker (if available)
+                long rollingAvg = 0L;
+                try {
+                    var vt = pipeline.getVolumeTracker(symbol);
+                    if (vt != null) {
+                        rollingAvg = Math.round(vt.getAverage());
+                    }
+                } catch (Exception ex) {
+                    // Defensive: signal detection should not fail due to missing tracker
+                    rollingAvg = 0L;
+                }
+
                 // Publish signal to the ring buffer (zero allocation)
                 publishSignal(symbol, signalType, strength, currentPrice, timestampNanos,
                         highestHigh.longValue(), lowestLow.longValue(), range.longValue(),
-                        totalVolume, avgClose.longValue());
+                        totalVolume, rollingAvg, avgClose.longValue());
             }
 
         } catch (IllegalArgumentException iae) {
@@ -213,7 +225,7 @@ public final class SignalDetector implements EventHandler<DisruptorTickEvent> {
      * @param avgClose average close
      */
     private void publishSignal(String symbol, int signalType, int strength, long price, long timestampNanos,
-                                long highestHigh, long lowestLow, long range, long totalVolume, long avgClose) {
+                                long highestHigh, long lowestLow, long range, long totalVolume, long rollingAvgVolume, long avgClose) {
         // Claim the next available sequence in the signal ring buffer
         long sequence = signalRingBuffer.next();
 
@@ -223,7 +235,7 @@ public final class SignalDetector implements EventHandler<DisruptorTickEvent> {
 
             // Populate the signal event with detected signal data
             signalEvent.set(symbol, signalType, strength, price, timestampNanos,
-                    highestHigh, lowestLow, range, totalVolume, avgClose);
+                    highestHigh, lowestLow, range, totalVolume, rollingAvgVolume, avgClose);
 
         } finally {
             // Always publish the sequence to signal the handler

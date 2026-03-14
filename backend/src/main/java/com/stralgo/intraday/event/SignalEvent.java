@@ -51,6 +51,7 @@ public final class SignalEvent {
     public long lowestLow;        // lowest low from rolling window
     public long range;            // price range
     public long totalVolume;      // total volume from rolling window
+    public long rollingAvgVolume; // rolling average tick volume (from RollingVolumeTracker)
     public long avgClose;         // average close from rolling window
 
     /**
@@ -67,6 +68,7 @@ public final class SignalEvent {
         this.lowestLow = 0L;
         this.range = 0L;
         this.totalVolume = 0L;
+        this.rollingAvgVolume = 0L;
         this.avgClose = 0L;
     }
 
@@ -85,7 +87,7 @@ public final class SignalEvent {
      * @param avgClose average close
      */
     public void set(String symbol, int signalType, int strength, long price, long timestampNanos,
-                    long highestHigh, long lowestLow, long range, long totalVolume, long avgClose) {
+                    long highestHigh, long lowestLow, long range, long totalVolume, long rollingAvgVolume, long avgClose) {
         this.symbol = symbol;
         this.signalType = signalType;
         this.strength = strength;
@@ -95,6 +97,7 @@ public final class SignalEvent {
         this.lowestLow = lowestLow;
         this.range = range;
         this.totalVolume = totalVolume;
+        this.rollingAvgVolume = rollingAvgVolume;
         this.avgClose = avgClose;
     }
 
@@ -112,6 +115,7 @@ public final class SignalEvent {
         this.lowestLow = 0L;
         this.range = 0L;
         this.totalVolume = 0L;
+        this.rollingAvgVolume = 0L;
         this.avgClose = 0L;
     }
 
@@ -178,6 +182,7 @@ public final class SignalEvent {
                 ", lowestLow=" + lowestLow +
                 ", range=" + range +
                 ", totalVolume=" + totalVolume +
+                ", rollingAvgVolume=" + rollingAvgVolume +
                 ", avgClose=" + avgClose +
                 '}';
     }

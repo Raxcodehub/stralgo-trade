@@ -5,6 +5,7 @@ import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.stralgo.analysis.DerivedMetrics;
+import com.stralgo.analysis.RollingVolumeTracker;
 import com.stralgo.analysis.RollingWindow;
 import com.stralgo.intraday.DisruptorBootstrap;
 import com.stralgo.intraday.event.SignalEvent;
@@ -308,6 +309,13 @@ public class App {
             // Pass through pipeline
             pipeline.onEvent(event);
 
+            // Demonstration: read per-symbol rolling volume tracker (updated inside pipeline)
+            RollingVolumeTracker vt = pipeline.getVolumeTracker(tick.symbol());
+            if (vt != null && tickCounter % PRINT_EVERY == 0) {
+                System.out.printf("Rolling vol for %s after %d ticks: avg=%.2f sum=%d count=%d%n",
+                        tick.symbol(), tickCounter, vt.getAverage(), vt.getSum(), vt.getCount());
+            }
+
             // Use tick timestamp + a small offset as processedTime to ensure monotonicity
             Instant processedTime = tick.timestamp().plusNanos(1000); // 1 microsecond later
             TickEvent processed = event.withProcessedTime(processedTime);
@@ -329,7 +337,7 @@ public class App {
 
         // Read candles back from CSV and print them (replay)
         CandleCsvReader reader = new CandleCsvReader();
-        Path file = dataDir.resolve(symbol).resolve(String.format("%s.csv", "2026-01-12"));
+        Path file = dataDir.resolve(symbol).resolve(String.format("%s.csv", "2026-01-11"));
 
         RollingWindow window5m = new RollingWindow(java.time.Duration.ofMinutes(5));
         RollingWindow window15m = new RollingWindow(java.time.Duration.ofMinutes(15));
