@@ -1,10 +1,16 @@
 package com.stralgo;
 
+import com.lmax.disruptor.BusySpinWaitStrategy;
+import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
 import com.stralgo.analysis.DerivedMetrics;
 import com.stralgo.analysis.RollingWindow;
 import com.stralgo.intraday.DisruptorBootstrap;
+import com.stralgo.intraday.event.SignalEvent;
 import com.stralgo.intraday.event.TickEvent;
-import com.stralgo.intraday.handler.TickPipelineHandler;
+import com.stralgo.intraday.handler.MarketStateHandler;
+import com.stralgo.intraday.handler.SignalDetector;
 import com.stralgo.intraday.ingest.TickPublisher;
 import com.stralgo.intraday.metrics.LatencyMetrics;
 import com.stralgo.intraday.pipeline.TickEventPipeline;
@@ -16,6 +22,9 @@ import com.stralgo.persistence.CandleCsvWriters;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import java.math.BigDecimal;
 import java.nio.file.Path;
@@ -45,10 +54,145 @@ public class App {
         return base;
     }
 
-    // MAIN: run Disruptor-based ingestion for testing
+    // MAIN: run SignalDetector test with two-stage Disruptor
     void main() throws Exception {
-        log.info("Starting application (non-reactive)");
-        runDirect();
+        log.info("Starting application (SignalDetector test)");
+        runSignalDetector();
+    }
+
+    // Test SignalDetector with two-stage Disruptor: tick → signal
+    private static void runSignalDetector() throws Exception {
+        log.info("Backend alive (SignalDetector mode)");
+        String symbol = "TEST";
+
+        Path dataDir = Path.of("data");
+        CandleCsvWriters.init(dataDir);
+
+        // Initialize pipeline
+        TickEventPipeline pipeline = new TickEventPipeline();
+
+        // Create signal Disruptor (second ring buffer)
+        ThreadFactory signalThreadFactory = new ThreadFactory() {
+            private final AtomicInteger threadCount = new AtomicInteger(0);
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r, "signal-consumer-" + threadCount.getAndIncrement());
+                t.setDaemon(false);
+                return t;
+            }
+        };
+
+        Disruptor<SignalEvent> signalDisruptor = new Disruptor<>(
+            SignalEvent::new,
+            1024,  // smaller ring buffer for signals
+            signalThreadFactory,
+            ProducerType.SINGLE,
+            new BusySpinWaitStrategy()
+        );
+
+        // Attach signal consumer that prints detected signals
+        signalDisruptor.handleEventsWith((event, sequence, endOfBatch) -> {
+            if (event.signalType != SignalEvent.SIGNAL_NONE) {
+                System.out.println("🔔 SIGNAL: " + event.getSignalTypeName() +
+                    " | " + event.symbol +
+                    " | strength=" + event.strength +
+                    " | price=" + event.price +
+                    " | range=" + event.range +
+                    " | volume=" + event.totalVolume);
+            }
+        });
+
+        // Start signal Disruptor
+        signalDisruptor.start();
+        RingBuffer<SignalEvent> signalRingBuffer = signalDisruptor.getRingBuffer();
+
+        // Create tick Disruptor with MarketStateHandler and SignalDetector
+        ThreadFactory tickThreadFactory = new ThreadFactory() {
+            private final AtomicInteger threadCount = new AtomicInteger(0);
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r, "tick-consumer-" + threadCount.getAndIncrement());
+                t.setDaemon(false);
+                return t;
+            }
+        };
+
+        Disruptor<com.stralgo.intraday.event.DisruptorTickEvent> tickDisruptor = new Disruptor<>(
+            com.stralgo.intraday.event.DisruptorTickEvent::new,
+            65536,
+            tickThreadFactory,
+            ProducerType.SINGLE,
+            new BusySpinWaitStrategy()
+        );
+
+        // Wire handlers: MarketStateHandler → SignalDetector
+        MarketStateHandler marketStateHandler = new MarketStateHandler(pipeline);
+        SignalDetector signalDetector = new SignalDetector(pipeline, signalRingBuffer);
+
+        tickDisruptor
+            .handleEventsWith(marketStateHandler)
+            .then(signalDetector);
+
+        // Start tick Disruptor
+        tickDisruptor.start();
+
+        // Create publisher
+        TickPublisher publisher = new TickPublisher(tickDisruptor.getRingBuffer());
+
+        // Metrics tracking
+        LatencyMetrics metrics = new LatencyMetrics();
+        final int PRINT_EVERY = 100;
+        int tickCounter = 0;
+
+        // Reset base time
+        base = Instant.now();
+
+        // Generate test ticks
+        List<Tick> ticks = new ArrayList<>();
+        for (int i = 0; i < 500; i++) {
+            BigDecimal price = BigDecimal.valueOf(95 + Math.random() * 10);
+            long volume = (long)(1 + Math.random() * 19);
+            ticks.add(Tick.of(symbol, price, volume, addSeconds(1)));
+        }
+
+        System.out.println("Publishing " + ticks.size() + " ticks into Disruptor...\n");
+
+        // Publish ticks into Disruptor
+        for (Tick tick : ticks) {
+            // Publish tick
+            long sequence = publisher.publishTick(tick);
+
+            // Track metrics
+            Instant receiveTime = tick.timestamp();
+            TickEvent event = TickEvent.ingest(tick, receiveTime);
+            Instant processedTime = tick.timestamp().plusNanos(1000);
+            TickEvent processed = event.withProcessedTime(processedTime);
+            metrics.record(processed);
+
+            tickCounter++;
+            if (tickCounter % PRINT_EVERY == 0) {
+                printMetrics(metrics);
+            }
+
+            // Small delay to see signals being generated
+            Thread.sleep(2);
+        }
+
+        System.out.println("\nDone feeding ticks into Disruptor.");
+
+        // Allow both Disruptors to drain
+        Thread.sleep(200);
+
+        // Shutdown both Disruptors gracefully
+        tickDisruptor.shutdown();
+        signalDisruptor.shutdown();
+
+        // Flush CSV writers
+        CandleCsvWriters.close();
+
+        // Print final metrics
+        System.out.println("\n=== Final Metrics ===");
+        printMetrics(metrics);
     }
 
     // Original main body moved here (minimal diff: keep original logic intact).

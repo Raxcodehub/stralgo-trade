@@ -6,7 +6,6 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.stralgo.intraday.event.DisruptorTickEvent;
 import com.stralgo.intraday.handler.MarketStateHandler;
-import com.stralgo.intraday.handler.SignalHandler;
 import com.stralgo.intraday.pipeline.TickEventPipeline;
 
 import java.util.Objects;
@@ -78,13 +77,9 @@ public final class DisruptorBootstrap {
             new BusySpinWaitStrategy()
         );
 
-        // Attach handlers as sequential stages:
-        // Stage 1: MarketStateHandler - builds candles and rolling windows
-        // Stage 2: SignalHandler - derives signals from market state
-        // Sequential execution via .then() ensures Stage 2 runs after Stage 1 completes
-        disruptor
-            .handleEventsWith(new MarketStateHandler(pipeline))
-            .then(new SignalHandler(pipeline));
+        // Attach handler:
+        // MarketStateHandler - builds candles and rolling windows from ticks
+        disruptor.handleEventsWith(new MarketStateHandler(pipeline));
 
         // Expose the ring buffer for the publisher
         this.ringBuffer = disruptor.getRingBuffer();
